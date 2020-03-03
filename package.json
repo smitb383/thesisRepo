@@ -1,0 +1,31 @@
+{
+  "name": "brookethesisserver",
+  "version": "1.0.0",
+  "description": "Server with redis for thesis project",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smitb383/thesis.git"
+  },
+  "keywords": [
+    "redis",
+    "arduino",
+    "server"
+  ],
+  "author": "Brooke Smith",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/smitb383/thesis/issues"
+  },
+  "homepage": "https://github.com/smitb383/thesis#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "http": "0.0.0",
+    "redis": "^3.0.2",
+    "server": "^1.0.27",
+    "socket.io": "^2.3.0"
+  }
+}
