@@ -15,22 +15,22 @@ const parser = new Readline();
 // port.pipe(parser);
 server.listen(8000);
 
-client.on("connect", function() {
+client.on("connect", function () {
   console.log("Redis client connected");
 });
 
-client.on("error", function(err) {
+client.on("error", function (err) {
   console.log("Something went wrong " + err);
 });
 
 app.use(express.static(__dirname + "/"));
 
-app.get("/", function(req, res) {
+app.get("/", function (req, res) {
   res.sendFile(__dirname + "/index.html");
 });
 
-io.on("connection", function(socket) {
-  app.get("/data/", function(req, res) {
+io.on("connection", function (socket) {
+  app.get("/data/", function (req, res) {
     // res.sendFile(__dirname + "/index.html");
     //sanity check for data
     // console.log(req.query);
@@ -38,22 +38,28 @@ io.on("connection", function(socket) {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
 
     client.hmset(
-      "names",
-      "name",
+      "values",
+      "position",
       // parseInt(req.query.name)
-      req.query.name
+      req.query.position
     );
-    client.hgetall("names", function(err, object) {
-      console.log("name " + object.name);
+    client.hgetall("values", function (err, object) {
 
-      res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      res.end(object.name);
+      console.log("position " + parseInt(object.position));
+      if (parseInt(object.position) >= 50) {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.end("1");
+      } else {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.end("0");
+      }
+
     });
   });
 
   //color values from the index page
-  parser.on("data", function(data) {});
-  socket.on("fromwebclient", function(data) {
+  parser.on("data", function (data) {});
+  socket.on("fromwebclient", function (data) {
     // client.hmset('frameworks', 'javascript', Base64.encode(data.r), 'css', 'Bootstrap', 'node', 'Express');
     client.hmset(
       "colorValues",
@@ -64,7 +70,7 @@ io.on("connection", function(socket) {
       "blue",
       parseInt(data.b)
     );
-    client.hgetall("colorValues", function(err, object) {
+    client.hgetall("colorValues", function (err, object) {
       console.log("red value " + object.red);
       console.log("green value " + object.green);
       console.log("blue value " + object.blue);
