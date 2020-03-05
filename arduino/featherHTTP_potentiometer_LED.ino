@@ -50,26 +50,18 @@ int testValue = 1;
 
 void loop() {
 
-  //testing potentiometer
-    inputVal = analogRead(analog_ip);
-  Serial.println(inputVal); 
-  analogWrite (LED, inputVal/4);
-
-  delay(100);
-
   
   if ((WiFiMulti.run() == WL_CONNECTED)) {   
         HTTPClient http;
         int httpCode;
-        
-        if(testValue <200 && movingLeft==true){
-          testValue ++; 
-        }
-       
-        String valueToString = String(testValue);
-//        Serial.println("testing " + valueToString); 
+
+        //testing potentiometer
+        inputVal = analogRead(analog_ip);
+
+        String valueToString = String(inputVal);
+            Serial.println(inputVal); 
         //cant put a value to the URL
-       http.begin("http://192.168.1.5:8000/data/?position=" + valueToString +"");
+       http.begin("http://192.168.1.5:8000/data/?potentiometer=" + valueToString +"");
 
     // start connection and send HTTP header
      httpCode = http.GET();
@@ -80,9 +72,13 @@ void loop() {
         String payload = http.getString();
         //checking data sent back from server
 
-Serial.print(payload); 
+        Serial.print(payload); 
         if(payload =="1"){
-           Serial.println("number over 50");
+           Serial.println("potentiometer over 400");        
+            analogWrite (LED, inputVal/4);
+        }
+        else{
+            analogWrite (LED, LOW);
         }
        
       }
@@ -103,7 +99,7 @@ else{
       // send if connection failed
       Serial.printf("\[HTTP] Unable to connect\n");
   }
-  delay(1000);
+  delay(500);
   
 
 }
