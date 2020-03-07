@@ -39,14 +39,14 @@ io.on("connection", function (socket) {
 
     client.hmset(
       "values",
-      "position",
+      "potentiometer",
       // parseInt(req.query.name)
-      req.query.position
+      req.query.potentiometer
     );
     client.hgetall("values", function (err, object) {
 
-      console.log("position " + parseInt(object.position));
-      if (parseInt(object.position) >= 50) {
+      console.log("potentiometer " + parseFloat(object.potentiometer));
+      if (parseFloat(object.potentiometer) >= 50.) {
         res.setHeader("Content-Type", "text/plain; charset=utf-8");
         res.end("1");
       } else {
