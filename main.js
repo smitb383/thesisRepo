@@ -39,22 +39,39 @@ io.on("connection", function (socket) {
 
     client.hmset(
       "values",
-      "potentiometer",
+      "currentSteps",
       // parseInt(req.query.name)
-      req.query.potentiometer
+      req.query.currentSteps
     );
+    // client.hmset(
+    //   "hits",
+    //   "velostatValue",
+    //   // parseInt(req.query.name)
+    //   req.query.velostatValue
+    // );
     client.hgetall("values", function (err, object) {
 
-      console.log("potentiometer " + parseFloat(object.potentiometer));
-      if (parseFloat(object.potentiometer) >= 50.) {
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
-        res.end("1");
-      } else {
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
-        res.end("0");
-      }
+      console.log("currentSteps " + parseInt(object.currentSteps));
+
+      // if (parseFloat(object.potentiometer) >= 50.) {
+      //   res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      //   res.end("1");
+      // } else {
+      //   res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      //   res.end("0");
+      // }
+      res.end("currentSteps" + parseInt(object.currentSteps));
 
     });
+    // client.hgetall("hits", function (err, object) {
+
+    //   console.log("velostatValue " + parseInt(object.velostatValue));
+
+    //   res.end("currentSteps" + parseInt(object.velostatValue));
+
+    // });
+
+
   });
 
   //color values from the index page
