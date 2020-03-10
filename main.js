@@ -30,6 +30,11 @@ app.get("/", function (req, res) {
 });
 
 io.on("connection", function (socket) {
+  console.log("connected to machine!!");
+  var totalHits = 0;
+  var hitLocations = 0;
+  var hitAveragePosition = 0;
+
   app.get("/data/", function (req, res) {
     // res.sendFile(__dirname + "/index.html");
     //sanity check for data
@@ -43,15 +48,36 @@ io.on("connection", function (socket) {
       // parseInt(req.query.name)
       req.query.currentSteps
     );
-    // client.hmset(
-    //   "hits",
-    //   "velostatValue",
-    //   // parseInt(req.query.name)
-    //   req.query.velostatValue
-    // );
-    client.hgetall("values", function (err, object) {
 
-      console.log("currentSteps " + parseInt(object.currentSteps));
+
+    client.hgetall("values", function (err, object) {
+      totalHits++;
+      console.log("hit position " + parseInt(object.currentSteps));
+      hitLocations += parseInt(object.currentSteps);
+      hitAveragePosition = hitLocations / totalHits;
+      console.log("hitAveragePosition= " + hitAveragePosition);
+      console.log("totalHIts " + totalHits);
+      console.log("////////////////////////////");
+
+      //every 5 htis send back average as instructions, store average in new dataset
+      if (totalHits % 5 == 0) {
+        //send back instructions 
+        //change the new middle point of the slider
+        //add the current average to a dataset 
+        client.hmset(
+          "values",
+          "averageHitPositions",
+          parseFloat(hitAveragePosition)
+
+        );
+        client.hgetall("values, ")
+
+        console.log("/////////////////////");
+        console.log("averagePositions " + parseInt(object.averageHitPositions));
+        console.log("averagePositions from variable " + hitAveragePosition);
+        console.log("/////////////////////");
+        //think about lookkng at weighting past averages as heavier than current instances 
+      }
 
       // if (parseFloat(object.potentiometer) >= 50.) {
       //   res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -63,16 +89,14 @@ io.on("connection", function (socket) {
       res.end("currentSteps" + parseInt(object.currentSteps));
 
     });
-    // client.hgetall("hits", function (err, object) {
 
-    //   console.log("velostatValue " + parseInt(object.velostatValue));
 
-    //   res.end("currentSteps" + parseInt(object.velostatValue));
-
-    // });
 
 
   });
+
+  // hitAveragePosition = hitLocation / totalHits;
+  // console.log(hitAveragePosition);
 
   //color values from the index page
   parser.on("data", function (data) {});
