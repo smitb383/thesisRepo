@@ -44,16 +44,16 @@ io.on("connection", function (socket) {
 
     client.hmset(
       "values",
-      "currentSteps",
+      "railPosHit",
       // parseInt(req.query.name)
-      req.query.currentSteps
+      req.query.railPosHit
     );
 
 
     client.hgetall("values", function (err, object) {
       totalHits++;
-      console.log("hit position " + parseInt(object.currentSteps));
-      hitLocations += parseInt(object.currentSteps);
+      console.log("hit position " + parseInt(object.railPosHit));
+      hitLocations += parseInt(object.railPosHit);
       hitAveragePosition = hitLocations / totalHits;
       console.log("hitAveragePosition= " + hitAveragePosition);
       console.log("totalHIts " + totalHits);
@@ -76,6 +76,8 @@ io.on("connection", function (socket) {
         console.log("averagePositions " + parseInt(object.averageHitPositions));
         console.log("averagePositions from variable " + hitAveragePosition);
         console.log("/////////////////////");
+        Math.round(hitAveragePosition);
+        res.end("" + parseInt(hitAveragePosition));
         //think about lookkng at weighting past averages as heavier than current instances 
       }
 
@@ -86,7 +88,7 @@ io.on("connection", function (socket) {
       //   res.setHeader("Content-Type", "text/plain; charset=utf-8");
       //   res.end("0");
       // }
-      res.end("currentSteps" + parseInt(object.currentSteps));
+      res.end("noChange");
 
     });
 
