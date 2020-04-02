@@ -21,13 +21,18 @@ ESP8266WiFiMulti WiFiMulti;
 bool travelingLeft = true; 
 bool travelingRight = false; 
 //10 full revolutions in each dierction 
-int stepsFullRange = 2000; 
+int stepsFullRange = stepsPerRevolution*14; 
 //steps to move for one full movement
 int currentSteps = stepsFullRange/2.0; 
 //where ever the slider is starting (might end up being somewhere in the middle 
-int railPos = stepsFullRange/2.0; 
-//float startingCenter = stepsFullRange/2.0; 
+int halfRail = stepsFullRange/2.0; 
+int middlePt = halfRail; 
+int midToLft = stepsFullRange/2.0; 
+int midtoRgt= stepsFullRange/2.0; 
+int railPos = 0; 
 
+
+ 
 //velostat
 const int analog_ip = A0;
 float inputVal = 0.;
@@ -68,30 +73,24 @@ for(int i=0; i<5; i++){
      delay(1000);
      Serial.print(String(5-i)); 
 }
+
+Serial.println("railpos: " + String(railPos)); 
+
 }
 void loop() {
   //while you are connected to the internet run 
   if ((WiFiMulti.run() == WL_CONNECTED)) {   
-     HTTPClient http;
-    int httpCode;
-
-    
-//get the analog value of velostat at the beginning of program
-String velostatValue = String(analogRead(analog_ip)); 
-String currentStepsString = String(currentSteps);   
-
-Serial.println("velostat serial reading= " + velostatValue); 
-
+   HTTPClient http;
+   int httpCode;
 
 while(hit ==false){
-  
-//determine direction to move 
-if(travelingLeft ==true){ //traveling left
-    digitalWrite(dirPin, HIGH);
-}
-else{ //traveling right
-   digitalWrite(dirPin, LOW);
-}
+//determine how far the midpoint is from each of the sides 
+//add this to part only when new mid point is received from server 
+//set the distance for traveling left and traveling right distance 
+midToLft = middlePt-0; 
+midtoRgt= stepsFullRange-middlePt;
+
+////////////////////CHECK PRESSURE SENSOR AND COMMUNICATE WITH SERVER/////////////////////////
 //evry 5 loop iterations chekc the value of the velostat 
   if(railPos% 5 == 0 && analogRead(analog_ip)>= 100.0){
     String railPosString = String(railPos);  
@@ -105,33 +104,15 @@ else{ //traveling right
         String payload = http.getString();
         //checking data sent back from server
         if (payload == "noChange"){
-          Serial.println("keep moving need more data!");
+          Serial.println("WAITING ON MORE DATA!");
         }
         else{
-          float newCenter = payload.toFloat(); 
-          Serial.println(newCenter); 
+          float newCenter = payload.toInt(); 
+//          Serial.println(newCenter); 
            Serial.println("NEW CENTER VALUE " + String(newCenter)); 
             Serial.println("CURRENT RAIL POSITION " + String(railPos)); 
            //move the slider to the new center position
-           while(newCenter > railPos){
-//              digitalWrite(dirPin, LOW);
-//             digitalWrite(stepPin, HIGH);
-//             digitalWrite(stepPin, LOW);
-//             delay(1); 
-Serial.println("new center greater than railPos"); 
-            railPos++; 
-            
-            //update rail poisiton to be at new center 
-           }
-           while (newCenter <railPos){
-//              digitalWrite(dirPin, HIGH);
-//            digitalWrite(stepPin, HIGH);
-//            digitalWrite(stepPin, LOW);
-//            delay(1); 
-Serial.println("new center less than railPos"); 
-            railPos--; 
-            //update rail position to be at new center 
-           }
+            middlePt =newCenter; 
            Serial.println("Delaying"); 
            delay(4000); 
         }
@@ -148,44 +129,107 @@ Serial.println("new center less than railPos");
       }
        http.end();
   }
-  
- //move all the way in one direction
- if(railPos < stepsFullRange && railPos > 0 ){ 
-    // These four lines result in 1 step:
-    digitalWrite(stepPin, HIGH);
-    digitalWrite(stepPin, LOW);
-    delay(1);
-    
-    if(travelingLeft ==true){
-      currentSteps--; 
-      railPos--; 
-    }
-    else{
-      currentSteps++; 
-      railPos++; 
-    }
-   }//end of movement loop   
-//change directions
-else if(railPos == stepsFullRange || railPos == 0 ){  
-  if(travelingLeft ==true){
-  travelingLeft =false; 
-   currentSteps++;
-   railPos++; 
-    
-  }
-  else{
-    travelingLeft = true; 
-    currentSteps--;
-    railPos--;
-    
-  }
-  //reset current Pos to 0 
-  Serial.println("current steps: "+ String(currentSteps)); 
-  Serial.println("current rail position: "+ String(railPos)); 
+///////////////////////////MOVEMENT OF STEPPER/////////////////////////
+////////////ONLY MOVE SHORTER DISTANCE FROM NEW MIDDLE TO END IN EACH DIRECTION////////////
+if(midToLft > midtoRgt){
+  midToLft =midtoRgt; 
+//  Serial.println(midToLft); 
+//  Serial.println(midtoRgt); 
+}
+if(midtoRgt > midToLft){
+  midtoRgt =midToLft; 
+//  Serial.println(midToLft); 
+//    Serial.println(midtoRgt); 
+}
+///////////////////////////MOVE SHORT LENGTH OF 1/2 of rail from new middle///////////////////////
+//if(midToLft > halfRail){
+//  midToLft =halfRail; 
+//}
+//if(midtoRgt > halfRail){
+//  midtoRgt =halfRail; 
+//}
 
+//determine direction to move 
+if(travelingLeft ==true){ //traveling left
+    digitalWrite(dirPin, HIGH);
+}
+else{ //traveling right
+   digitalWrite(dirPin, LOW);
 }
 
 
+//moving left side of the middle point
+if(railPos <= middlePt && railPos >= middlePt-midToLft){
+
+  if(railPos ==middlePt){
+     Serial.println("AT MIDDLE= " + String(middlePt)); 
+    delay(250); 
+  }
+  //reached the left end (0 pos)
+if (railPos == middlePt-midToLft){
+//   Serial.println("reached LEFT"); 
+//   Serial.println(railPos); 
+  travelingLeft =false; 
+  travelingRight = true; 
+  railPos++; 
+ 
+}
+else{
+   digitalWrite(stepPin, HIGH);
+   digitalWrite(stepPin, LOW);
+   delay(1);
+
+   //moving towards left end 
+  if(travelingLeft ==true){
+//    Serial.println("traveling from MIDDLE to LEFT"); 
+    railPos--;
+//    Serial.println(railPos); 
+  }
+  
+  //moving back towards center
+  else{
+//    Serial.println("traveling from LEFT to MIDDLE"); 
+    railPos++;
+//    Serial.println(railPos); 
+  }
+}
+} ////end of traveling left side
+
+
+//traveling to the right now 
+if(railPos > middlePt && railPos <=middlePt+ midtoRgt){
+  
+  //reached the far end of rail
+if (railPos == middlePt+ midtoRgt){
+//   Serial.println("midToRight: " + String(midtoRgt)); 
+//      Serial.println("middlePt + midToRight: " + String(middlePt+ midtoRgt)); 
+//  Serial.println("reached RIGHT"); 
+  travelingLeft =true; 
+  travelingRight = false; 
+//  Serial.println(railPos);
+  railPos--; 
+}
+else{
+  digitalWrite(stepPin, HIGH);
+   digitalWrite(stepPin, LOW);
+   delay(1);
+
+   //moving towards right end 
+  if(travelingRight ==true){
+//     Serial.println("traveling from MIDDLE to RIGHT"); 
+      railPos++;
+//      Serial.println(railPos);
+  }
+  //moving back towards center
+  else{
+//    Serial.println("traveling from RIGHT to MIDDLE"); 
+    railPos--;
+//    Serial.println(railPos);
+  }
+}
+} //end of traveling right side
+
+ 
   
 } //end of main while loop 
 
