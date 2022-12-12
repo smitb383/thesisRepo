@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/smitb383/thesis#readme",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "http": "0.0.0",
     "redis": "^3.0.2",
     "server": "^1.0.27",
